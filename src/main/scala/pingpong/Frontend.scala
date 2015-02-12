@@ -16,15 +16,16 @@ class Frontend extends Actor {
 
   def receive = {
     case "DoVeryImportantJob" if backends.isEmpty =>
+      println("emptyBackends")
       sender() ! "Service unavailable, try again later"
-    case "DoVeryImportantJob" =>
-      jobCounter += 1
-      backends(jobCounter % backends.size) forward "DoVeryImportantJob"
     case "RegisterBackend" if !backends.contains(sender()) =>
       context watch sender()
       backends = backends :+ sender()
     case Terminated(a) =>
       backends = backends.filterNot(_ == a)
+    case command:String =>
+      jobCounter += 1
+      backends(jobCounter % backends.size) forward command
   }
 }
 
